@@ -20,8 +20,8 @@ namespace ProgressiveDeadlineMod.Patches
 
 			float minimumDays = ProgressiveDeadlineMod.setMinimumDays.Value;
 
-			__instance.quotaVariables.startingQuota = 0;
-			__instance.quotaVariables.startingCredits = 1000;
+			//__instance.quotaVariables.startingQuota = 0;
+			//__instance.quotaVariables.startingCredits = 1000;
 			__instance.quotaVariables.deadlineDaysAmount = (int)minimumDays;
 		}
 	}
@@ -64,4 +64,3 @@ namespace ProgressiveDeadlineMod.Patches
         }
     }
 }
-
