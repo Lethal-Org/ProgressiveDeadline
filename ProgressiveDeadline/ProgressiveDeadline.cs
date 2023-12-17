@@ -35,7 +35,7 @@ namespace ProgressiveDeadlineMod
 
             mls = BepInEx.Logging.Logger.CreateLogSource(modName);
 
-            mls.LogInfo("No more short deadlines for excessive quotas.");
+            mls.LogInfo("Progressive Quotas started");
 
             setMinimumDays = Config.Bind(
 				"Customizable Values", "Minimum Deadline", 2f,

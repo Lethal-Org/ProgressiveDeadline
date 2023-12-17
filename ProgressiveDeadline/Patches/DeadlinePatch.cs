@@ -37,7 +37,7 @@ namespace ProgressiveDeadlineMod.Patches
 
 			// Return if not the host
             if (!RoundManager.Instance.NetworkManager.IsHost) {
-                ProgressiveDeadlineMod.Instance.mls.LogInfo("This person is not the host. Will not change deadline or send rpc.");
+                ProgressiveDeadlineMod.Instance.mls.LogInfo("You're not the host.");
                 return;
             }
 
@@ -59,7 +59,7 @@ namespace ProgressiveDeadlineMod.Patches
 
 			__instance.timeUntilDeadline = totalTime * newDeadline;
 
-			ProgressiveDeadlineMod.Instance.mls.LogInfo($"Player is host, new deadline: {newDeadline}");
+			ProgressiveDeadlineMod.Instance.mls.LogInfo($"You're host, new deadline: {newDeadline}");
 			TimeOfDay.Instance.SyncTimeClientRpc(__instance.globalTime, (int)__instance.timeUntilDeadline);
         }
     }
