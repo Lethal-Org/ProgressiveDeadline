@@ -7,7 +7,7 @@ The mod operates by recalculating the game's original three-day deadline using f
 - Min Deadline (Default: 2): Defines the minimum duration the game can allocate for completing a quota.
 - Max Deadline (Default: a very big number): Sets the upper limit of days within which the quota needs to be accomplished.
 - Min Daily Scrap (Default: 200): Establishes the baseline for the amount of scrap theoretically collectible in a day.
-- Min Daily Scrap Increase (Default: 30): Determines the incremental increase in the minimum daily scrap value each time a quota is met.
+- Min Daily Scrap Increase (Default: 100): Determines the incremental increase in the minimum daily scrap value each time a quota is met.
 
 Taking into account the parameters set by the user, the mod calculates the deadline in the following manner:
 
@@ -17,16 +17,21 @@ Taking into account the parameters set by the user, the mod calculates the deadl
 - After a quota is complete, it will increase the minimum daily scrap by 
 `minDailyScrapIncrease`
 
-Using the default values, this is an example of the deadlines on certain quota values:
-| Quota | Daily | Days |
-|-------|-------|------|
-| 200   | 200   | 2    |
-| 500   | 230   | 3    |
-| 800   | 260   | 4    |
-| 1100  | 290   | 4    |
-| 1400  | 320   | 5    |
-| 1700  | 350   | 5    |
-| 2000  | 380   | 6    |
+This table showcases the amount of days corresponding to each **minDailyScrapIncrease (MDSI)** value, as indicated within **parentheses**. The default value is 100.
+| QUOTA | DAYS (50 MDSI) | DAYS (100 MDSI) | DAYS (150 MDSI) | DAYS (200 MDSI) | DAYS (250 MDSI) |
+|-------|----------------|-----------------|-----------------|-----------------|-----------------|
+| 130   | 3              | 3               | 3               | 3               | 3               |
+| 395   | 3              | 3               | 3               | 3               | 3               |
+| 740   | 3              | 3               | 3               | 3               | 3               |
+| 1400  | 4              | 3               | 3               | 3               | 3               |
+| 2256  | 6              | 4               | 3               | 3               | 3               |
+| 3875  | 9              | 6               | 5               | 4               | 3               |
+| 5856  | 12             | 8               | 6               | 5               | 4               |
+| 8240  | 15             | 10              | 7               | 6               | 5               |
+| 12032 | 21             | 13              | 9               | 7               | 6               |
+| 16498 | 26             | 15              | 11              | 9               | 7               |
+| 20997 | 30             | 18              | 13              | 10              | 8               |
+| 24643 | 33             | 19              | 14              | 11              | 9               |
 
 
 # Installation

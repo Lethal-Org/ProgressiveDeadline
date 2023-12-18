@@ -11,7 +11,7 @@ namespace ProgressiveDeadlineMod
     {
         private const string modGUID = "LethalOrg.ProgressiveDeadline";
         private const string modName = "Progressive Deadline";
-        private const string modVersion = "0.0.0";
+        private const string modVersion = "1.0.1";
 
         private readonly Harmony harmony = new Harmony(modGUID);
 
@@ -35,7 +35,7 @@ namespace ProgressiveDeadlineMod
 
             mls = BepInEx.Logging.Logger.CreateLogSource(modName);
 
-            mls.LogInfo("Progressive Quotas started");
+            mls.LogInfo("Progressive deadline started");
 
             setMinimumDays = Config.Bind(
 				"Customizable Values", "Minimum Deadline", 2f,
@@ -53,7 +53,7 @@ namespace ProgressiveDeadlineMod
 			);
 
             incrementalDailyValue = Config.Bind(
-				"Customizable Values", "Incremental Daily Value", 30f,
+				"Customizable Values", "Incremental Daily Value", 100f,
 				"This is the amount the minimum scrap value will increase every time a quota is complete."
 			);
 

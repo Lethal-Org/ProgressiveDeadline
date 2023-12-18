@@ -26,7 +26,6 @@ namespace ProgressiveDeadlineMod.Patches
 		}
 	}
 
-
 	// Set new deadline
     [HarmonyPatch(typeof(TimeOfDay), nameof(TimeOfDay.SetNewProfitQuota))]
     public class ProfitQuotaPatch
