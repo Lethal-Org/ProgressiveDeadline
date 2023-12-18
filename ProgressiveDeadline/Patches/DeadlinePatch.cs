@@ -20,7 +20,7 @@ namespace ProgressiveDeadlineMod.Patches
 
 			float minimumDays = ProgressiveDeadlineMod.setMinimumDays.Value;
 
-			//__instance.quotaVariables.startingQuota = 0;
+			__instance.quotaVariables.startingQuota = 0;
 			//__instance.quotaVariables.startingCredits = 1000;
 			__instance.quotaVariables.deadlineDaysAmount = (int)minimumDays;
 		}
@@ -45,15 +45,33 @@ namespace ProgressiveDeadlineMod.Patches
             float maximumDays = ProgressiveDeadlineMod.setMaximumDays.Value;
 			float minScrapValuePerDay = ProgressiveDeadlineMod.minScrapValuePerDay.Value;
 			float incrementalDailyValue = ProgressiveDeadlineMod.incrementalDailyValue.Value;
+			QuotaSettings quotaVariables = __instance.quotaVariables;
 
 			// Get some values from instance
 			float totalTime = (float)__instance.totalTime;
             float runCount = __instance.timesFulfilledQuota;
 			int profitQuota = __instance.profitQuota;
 
+			// Get some values from quota settings
+			AnimationCurve randomizerCurve = quotaVariables.randomizerCurve;
+			float increaseSteepness = quotaVariables.increaseSteepness;
+
+			// Load previous daily value
+			if (!ES3.KeyExists("previousDaily"))
+				ES3.Save("previousDaily", minScrapValuePerDay);
+			minScrapValuePerDay = ES3.Load("previousDaily", minScrapValuePerDay);
+
+			// Calculate the daily increase
+			float random_point = randomizerCurve.Evaluate(Random.Range(0f, 1f)) + 1f;
+			float dailyScrapIncrease = 1f + (float)runCount * ((float)runCount / increaseSteepness);
+			dailyScrapIncrease = incrementalDailyValue * dailyScrapIncrease * (random_point);
+
+			// Update daily scrap
+			minScrapValuePerDay += dailyScrapIncrease;
+			ES3.Save("previousDaily", minScrapValuePerDay);
+
 			// Calculate new Deadline
-			float dailyScrapIncrease = (runCount * incrementalDailyValue);
-			float averageDays = Mathf.Ceil(profitQuota / (minScrapValuePerDay + dailyScrapIncrease));
+			float averageDays = Mathf.Ceil(profitQuota / (minScrapValuePerDay));
 			float newDeadline = Mathf.Clamp(averageDays, minimumDays, maximumDays);
 
 			__instance.timeUntilDeadline = totalTime * newDeadline;
