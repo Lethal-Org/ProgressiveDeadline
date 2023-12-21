@@ -28,6 +28,8 @@ namespace ProgressiveDeadlineMod {
 
 			int total_deadline = timeOfDay.quotaVariables.deadlineDaysAmount;
 			int remaining_deadline = getDeadlineDays(timeOfDay);
+			
+			ProgressiveDeadlineMod.Instance.mls.LogInfo($"AQ {total_deadline} {remaining_deadline}");
 
 			if (remaining_deadline == 0)
 				return 1f;

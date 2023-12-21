@@ -103,12 +103,18 @@ namespace ProgressiveDeadlineMod.Patches {
         [HarmonyPostfix]
 		static void deadlineSync (TimeOfDay __instance) {
 
-			__instance.quotaVariables.deadlineDaysAmount = Utils.getDeadlineDays(__instance);
+			int deadlineDaysAmount = Utils.getDeadlineDays(__instance);
 
-			if (__instance.totalTime == 0)
+			if (__instance.totalTime == 0){
+				__instance.quotaVariables.deadlineDaysAmount = deadlineDaysAmount;
 				return;
+			}
 
-			StartOfRound.Instance.companyBuyingRate = Utils.buyingRate(__instance);
+			// Means that the quota is fullfilled
+			if (deadlineDaysAmount > __instance.quotaVariables.deadlineDaysAmount){
+				__instance.quotaVariables.deadlineDaysAmount = deadlineDaysAmount;
+				StartOfRound.Instance.companyBuyingRate = Utils.buyingRate(__instance);
+			}
 		}
 	}
 
