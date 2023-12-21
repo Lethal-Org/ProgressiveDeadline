@@ -11,6 +11,8 @@ build:
 
 clean:
 	dotnet clean ./ProgressiveDeadline
+	rm -rf ./ProgressiveDeadline/bin
+	rm -rf ./ProgressiveDeadline/obj
 	rm -rf ./build
 
 .PHONY: build

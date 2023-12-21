@@ -72,7 +72,7 @@
 
 	<ItemGroup>
 		<Compile Include="Patches/DeadlinePatch.cs" />
-		<Compile Include="Patches/BuyingRatePatch.cs" />
+		<Compile Include="Utils/DeadlineUtils.cs" />
 		<Compile Include="ProgressiveDeadline.cs" />
 	</ItemGroup>
 

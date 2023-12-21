@@ -3,33 +3,56 @@ using UnityEngine;
 using ProgressiveDeadlineMod;
 using BepInEx.Logging;
 
-namespace ProgressiveDeadlineMod.Patches
-{
+namespace ProgressiveDeadlineMod.Patches {
+
 	// Set starting deadline
 	[HarmonyPatch(typeof(TimeOfDay))]
 	[HarmonyPatch("Awake")]
-	public static class QuotaSettingsPatch 
-	{
+	public static class QuotaSettingsPatch {
 		[HarmonyPostfix]
-		public static void SetStartingQuota (TimeOfDay __instance)
-		{
-			if (__instance.quotaVariables == null)
-			{
+		public static void SetStartingDeadline (TimeOfDay __instance) {
+			if (__instance.quotaVariables == null || !RoundManager.Instance.NetworkManager.IsHost) 
 				return;
-			}
 
-			float minimumDays = ProgressiveDeadlineMod.setMinimumDays.Value;
+			string currentSave = GameNetworkManager.Instance.currentSaveFileName;
+			float minimumDays = ProgressiveDeadlineMod.minimumDays.Value;
+			float deadlineAmount = ES3.Load("deadlineAmount", currentSave, minimumDays);
 
-			__instance.quotaVariables.startingQuota = 0;
+			__instance.timeUntilDeadline = Utils.getTimeUntilDeadline(__instance, deadlineAmount);
+			__instance.SyncTimeClientRpc(__instance.globalTime, (int)__instance.timeUntilDeadline);
+
+			// Hacks for testing the mod
+			//__instance.quotaFulfilled = 1000;
+			//__instance.quotaVariables.startingQuota = 0;
+			//__instance.quotaVariables.deadlineDaysAmount = (int)deadlineAmount;
 			//__instance.quotaVariables.startingCredits = 1000;
-			__instance.quotaVariables.deadlineDaysAmount = (int)minimumDays;
 		}
 	}
 
+	[HarmonyPatch(typeof(GameNetworkManager), nameof(GameNetworkManager.ResetSavedGameValues))]
+    public class ResetSavedValuesPatch {
+        [HarmonyPrefix]
+        public static void ResetSaves(GameNetworkManager __instance) {
+			if (!RoundManager.Instance.NetworkManager.IsHost)
+				return;
+
+			TimeOfDay timeOfDay = Object.FindObjectOfType<TimeOfDay>();
+            string currentSave = GameNetworkManager.Instance.currentSaveFileName;
+
+			float minimumDays = ProgressiveDeadlineMod.minimumDays.Value;
+			float minDailyScrap = ProgressiveDeadlineMod.minDailyScrap.Value;
+
+			timeOfDay.timeUntilDeadline = Utils.getTimeUntilDeadline(timeOfDay, minimumDays);
+			timeOfDay.SyncTimeClientRpc(timeOfDay.globalTime, (int)timeOfDay.timeUntilDeadline);
+
+			ES3.Save("deadlineAmount", minimumDays, currentSave);
+			ES3.Save("previousDaily", minDailyScrap, currentSave);
+        }
+    }
+
 	// Set new deadline
     [HarmonyPatch(typeof(TimeOfDay), nameof(TimeOfDay.SetNewProfitQuota))]
-    public class ProfitQuotaPatch
-    {
+    public class ProfitQuotaPatch {
 
         [HarmonyPostfix]
         static void ProgressiveDeadline(TimeOfDay __instance) {
@@ -41,43 +64,60 @@ namespace ProgressiveDeadlineMod.Patches
             }
 
 			// Read configuration values
-			float minimumDays = ProgressiveDeadlineMod.setMinimumDays.Value;
-            float maximumDays = ProgressiveDeadlineMod.setMaximumDays.Value;
-			float minScrapValuePerDay = ProgressiveDeadlineMod.minScrapValuePerDay.Value;
-			float incrementalDailyValue = ProgressiveDeadlineMod.incrementalDailyValue.Value;
-			QuotaSettings quotaVariables = __instance.quotaVariables;
+			float minimumDays = ProgressiveDeadlineMod.minimumDays.Value;
+            float maximumDays = ProgressiveDeadlineMod.maximumDays.Value;
+			float minDailyScrap = ProgressiveDeadlineMod.minDailyScrap.Value;
 
 			// Get some values from instance
+            string currentSave = GameNetworkManager.Instance.currentSaveFileName;
 			float totalTime = (float)__instance.totalTime;
             float runCount = __instance.timesFulfilledQuota;
-			int profitQuota = __instance.profitQuota;
+			AnimationCurve randomizerCurve = __instance.quotaVariables.randomizerCurve;
 
-			// Get some values from quota settings
-			AnimationCurve randomizerCurve = quotaVariables.randomizerCurve;
-			float increaseSteepness = quotaVariables.increaseSteepness;
-
-			// Load previous daily value
-			if (!ES3.KeyExists("previousDaily"))
-				ES3.Save("previousDaily", minScrapValuePerDay);
-			minScrapValuePerDay = ES3.Load("previousDaily", minScrapValuePerDay);
-
-			// Calculate the daily increase
-			float random_point = randomizerCurve.Evaluate(Random.Range(0f, 1f)) + 1f;
-			float dailyScrapIncrease = 1f + (float)runCount * ((float)runCount / increaseSteepness);
-			dailyScrapIncrease = incrementalDailyValue * dailyScrapIncrease * (random_point);
-
-			// Update daily scrap
-			minScrapValuePerDay += dailyScrapIncrease;
-			ES3.Save("previousDaily", minScrapValuePerDay);
+			// Load and update daily scrap
+			float dailyScrap = ES3.Load("previousDaily", currentSave, minDailyScrap);
+			dailyScrap += Utils.dailyIncrease(runCount, randomizerCurve);
 
 			// Calculate new Deadline
-			float averageDays = Mathf.Ceil(profitQuota / (minScrapValuePerDay));
+			float averageDays = Mathf.Ceil(__instance.profitQuota / dailyScrap);
 			float newDeadline = Mathf.Clamp(averageDays, minimumDays, maximumDays);
 
-			__instance.timeUntilDeadline = totalTime * newDeadline;
+			// Save values
+			ES3.Save("previousDaily", dailyScrap, currentSave);
+			ES3.Save("deadlineAmount", newDeadline, currentSave);
 
-			ProgressiveDeadlineMod.Instance.mls.LogInfo($"You're host, new deadline: {newDeadline}");
+			// Update deadline and sync
+			__instance.timeUntilDeadline = totalTime * newDeadline;
 			TimeOfDay.Instance.SyncTimeClientRpc(__instance.globalTime, (int)__instance.timeUntilDeadline);
+			ProgressiveDeadlineMod.Instance.mls.LogInfo($"You're host, new deadline: {newDeadline}");
+
+			// HACK
+			//__instance.quotaFulfilled = 1000;
         }
     }
+
+	// Sync deadlineDaysAmount with client after 
+    [HarmonyPatch(typeof(TimeOfDay), nameof(TimeOfDay.SyncTimeClientRpc))]
+    public class DeadlineDaysAmountSyncPatch {
+
+        [HarmonyPostfix]
+		static void deadlineSync (TimeOfDay __instance) {
+
+			__instance.quotaVariables.deadlineDaysAmount = Utils.getDeadlineDays(__instance);
+
+			if (__instance.totalTime == 0)
+				return;
+
+			StartOfRound.Instance.companyBuyingRate = Utils.buyingRate(__instance);
+		}
+	}
+
+	// Update buying rate
+	[HarmonyPatch(typeof(TimeOfDay), nameof(TimeOfDay.SetBuyingRateForDay))]
+	public class BuyingRatePatch {
+		[HarmonyPostfix]
+		public static void SetBuyingRate (TimeOfDay __instance) {
+			StartOfRound.Instance.companyBuyingRate = Utils.buyingRate(__instance);
+		}
+	}
 }
