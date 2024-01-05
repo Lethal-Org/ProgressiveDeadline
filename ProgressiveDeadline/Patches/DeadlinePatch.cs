@@ -31,13 +31,14 @@ namespace ProgressiveDeadlineMod.Patches {
 
 	[HarmonyPatch(typeof(GameNetworkManager), nameof(GameNetworkManager.ResetSavedGameValues))]
     public class ResetSavedValuesPatch {
-        [HarmonyPrefix]
+
+        [HarmonyPostfix]
         public static void ResetSaves(GameNetworkManager __instance) {
 			if (!RoundManager.Instance.NetworkManager.IsHost)
 				return;
 
 			TimeOfDay timeOfDay = Object.FindObjectOfType<TimeOfDay>();
-            string currentSave = GameNetworkManager.Instance.currentSaveFileName;
+            string currentSave = __instance.currentSaveFileName;
 
 			float minimumDays = ProgressiveDeadlineMod.minimumDays.Value;
 			float minDailyScrap = ProgressiveDeadlineMod.minDailyScrap.Value;
