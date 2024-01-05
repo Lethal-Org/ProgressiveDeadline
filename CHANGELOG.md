@@ -1,3 +1,6 @@
+# 2.0.1
+- Fix issue that caused mod not to work after game over
+
 # 2.0.0
 - Added a new method to calculate deadline using the same algorithm as the quota
 - Added an option to use the old linear method

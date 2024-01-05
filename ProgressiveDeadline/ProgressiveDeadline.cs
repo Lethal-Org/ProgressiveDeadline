@@ -11,7 +11,7 @@ namespace ProgressiveDeadlineMod
     {
         private const string modGUID = "LethalOrg.ProgressiveDeadline";
         private const string modName = "Progressive Deadline";
-        private const string modVersion = "2.0.0";
+        private const string modVersion = "2.0.1";
 
         private readonly Harmony harmony = new Harmony(modGUID);
 
